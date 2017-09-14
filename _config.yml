@@ -17,19 +17,32 @@ title: Ciao.moe
 email: platokon@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
   A Ruby Developer
+
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://blog.ciao.moe" # the base hostname & protocol for your site, e.g. http://example.com
-timezone: Asia/Shanghai
-twitter_username: platokon
-github_username:  wongsean
-
+paginate_path: "blog/page:num/"
 permalink: /:year/:month/:day/:title/
+
+timezone: Asia/Shanghai
 
 # Build settings
 markdown: kramdown
-theme: minima
-gems:
-  - jekyll-feed
-exclude:
-  - Gemfile
-  - Gemfile.lock
+highlighter: rouge
+gems: [jekyll-paginate]
+paginate: 5
+
+navigation:
+ - title: Home
+   url: /
+ - title: About
+   url: /about/
+# - title: Contact
+#   url: /contact
+
+social:
+   github: wongsean
+   twitter: platokon
+#   facebook: platokon
+   email: platokon@gmail.com
+
+google_analytics: "UA-75928641-1"
