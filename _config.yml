@@ -86,3 +86,11 @@ feed:
   path: feed.xml
   limit: false
   hub:
+
+markdown:
+  plugins:
+    - markdown-it-abbr
+    - markdown-it-footnote
+    - markdown-it-ins
+    - markdown-it-sub
+    - markdown-it-sup
