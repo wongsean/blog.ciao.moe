@@ -5,7 +5,8 @@
 # Site
 title: Ciao.moe
 subtitle:
-description: A personal blog of Sean Wong, a backend developer.
+description: Ciao, I am a Gamer, Anime Addict, Backend Developer who writes Ruby and Typescript.
+keywords:
 author: Sean Wong
 language: zh-CN
 timezone: Asia/Shanghai
@@ -42,16 +43,16 @@ highlight:
   line_number: true
   auto_detect: false
   tab_replace:
-  
+
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
 # per_page: Posts displayed per page. (0 = disable pagination)
 # order_by: Posts order. (Order by date descending by default)
 index_generator:
-  path: ''
+  path: ""
   per_page: 10
   order_by: -date
-  
+
 # Category & Tag
 default_category: uncategorized
 category_map:
@@ -72,7 +73,24 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: cactus-light
+theme: cactus
+theme_config:
+  colorscheme: light
+
+  nav:
+    Home: /
+    About: /about/
+    Writing: /archives/
+    Projects: https://github.com/wongsean
+
+  posts_overview:
+    show_all_posts: true
+
+  social_links:
+    github: https://github.com/wongsean
+    steam: https://steamcommunity.com/id/platokon
+
+  rss:
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -84,13 +102,8 @@ deploy:
 feed:
   type: atom
   path: feed.xml
-  limit: false
+  limit: 20
   hub:
-
-markdown:
-  plugins:
-    - markdown-it-abbr
-    - markdown-it-footnote
-    - markdown-it-ins
-    - markdown-it-sub
-    - markdown-it-sup
+  content:
+  content_limit: 140
+  content_limit_delim: " "
