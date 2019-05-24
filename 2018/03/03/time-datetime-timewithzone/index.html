@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.8.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="如果你开始在 Rails 中开始处理时间，这显然是在实现一个应用中无法避免的，你一定很快就会遇到第一个问题，Rails 中有三个可以表示时间的类 - Time，DateTime and ActiveSupport::TimeWithZone, 他们之间有什么不同？ 当然，让我们从一些老生常谈开始 Time vs. DateTime相对于 TimeWithZone 随 Ruby 一同安装后开箱即用的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Time, DateTime and TimeWithZone">
+<meta property="og:url" content="https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/index.html">
+<meta property="og:site_name" content="Ciao.moe">
+<meta property="og:description" content="如果你开始在 Rails 中开始处理时间，这显然是在实现一个应用中无法避免的，你一定很快就会遇到第一个问题，Rails 中有三个可以表示时间的类 - Time，DateTime and ActiveSupport::TimeWithZone, 他们之间有什么不同？ 当然，让我们从一些老生常谈开始 Time vs. DateTime相对于 TimeWithZone 随 Ruby 一同安装后开箱即用的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-05-15T11:31:09.013Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Time, DateTime and TimeWithZone">
+<meta name="twitter:description" content="如果你开始在 Rails 中开始处理时间，这显然是在实现一个应用中无法避免的，你一定很快就会遇到第一个问题，Rails 中有三个可以表示时间的类 - Time，DateTime and ActiveSupport::TimeWithZone, 他们之间有什么不同？ 当然，让我们从一些老生常谈开始 Time vs. DateTime相对于 TimeWithZone 随 Ruby 一同安装后开箱即用的">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>Time, DateTime and TimeWithZone</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2017/06/25/ruby-constant-lookup/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&text=Time, DateTime and TimeWithZone"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&is_video=false&description=Time, DateTime and TimeWithZone"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Time, DateTime and TimeWithZone&body=Check out this article: https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&name=Time, DateTime and TimeWithZone&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-vs-DateTime"><span class="toc-number">1.</span> <span class="toc-text">Time vs. DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DateTime-vs-TimeWithZone"><span class="toc-number">2.</span> <span class="toc-text">DateTime vs. TimeWithZone</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ENV-‘TZ’-vs-config-time-zone"><span class="toc-number">3.</span> <span class="toc-text">ENV[‘TZ’] vs. config.time_zone</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Time, DateTime and TimeWithZone
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Ciao.moe</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2018-03-03T04:39:10.000Z" itemprop="datePublished">2018-03-03</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/tech/">tech</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>如果你开始在 Rails 中开始处理时间，这显然是在实现一个应用中无法避免的，你一定很快就会遇到第一个问题，Rails 中有三个可以表示时间的类 - Time，DateTime and ActiveSupport::TimeWithZone, 他们之间有什么不同？</p>
+<p>当然，让我们从一些老生常谈开始</p>
+<h2 id="Time-vs-DateTime"><a href="#Time-vs-DateTime" class="headerlink" title="Time vs. DateTime"></a>Time vs. DateTime</h2><p>相对于 TimeWithZone 随 Ruby 一同安装后开箱即用的 Time 和 DateTime 可能是你第一个使用过的时间相关的类，你应该和我一样困惑过，他们有什么区别，在应用中我应该使用哪一个？</p>
+<p>地位上，Time 来自 Ruby 核心库(core)，无需 <code>require</code> 加载即可使用，DateTime 属于 Date 的子类，一同来自于 Ruby 标准库(std-lib)，需要额外 <code>require &#39;date&#39;</code>。</p>
+<p>如果查阅到一些过时的资料，可能会看到诸如 “Time 是对 <a href="https://en.wikipedia.org/wiki/Unix_time" target="_blank" rel="noopener">POSIX time</a> 的简单封装，因此只能表示 <code>1970-01-01 00:00:00 +00:00</code> 之后的时间”，但实际上自 Ruby 1.9.2，Time 可以表示时间不在受到限制。</p>
+<blockquote>
+<p>Since Ruby 1.9.2, Time implementation uses a signed 63 bit integer, Bignum or Rational. The integer is a number of nanoseconds since the Epoch which can represent 1823-11-12 to 2116-02-20. When Bignum or Rational is used (before 1823, after 2116, under nanosecond), Time works slower as when integer is used.</p>
+</blockquote>
+<p>在日常使用上 Time 与 DateTime 没有太大的差别，可以处理历史中的年月日，时分秒，星期和时区，已经能涵盖大多是的使用案例，但倘若你要同时考虑一些历史上的历法转变 DateTime 将是你的不二之选，以下是来自 API 文档中的一段示例，如果你看完之后震惊之余，苦思冥想也无法参透其中缘由，别想那么多，那说明你根本用不上他。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">shakespeare = DateTime.iso8601(<span class="string">'1616-04-23'</span>, Date::ENGLAND)</span><br><span class="line"> <span class="comment">#=&gt; Tue, 23 Apr 1616 00:00:00 +0000</span></span><br><span class="line">cervantes = DateTime.iso8601(<span class="string">'1616-04-23'</span>, Date::ITALY)</span><br><span class="line"> <span class="comment">#=&gt; Sat, 23 Apr 1616 00:00:00 +0000</span></span><br></pre></td></tr></table></figure>
+<h2 id="DateTime-vs-TimeWithZone"><a href="#DateTime-vs-TimeWithZone" class="headerlink" title="DateTime vs. TimeWithZone"></a>DateTime vs. TimeWithZone</h2><p>ActiveSupport::TimeWithZone（以下简称 TimeWithZone）作为 ActiveRecord 中 datetime 数据库类型的默认对应类型，旨在让 Rails 开发者更方便的处理时区。尽管 Time 和 DateTime 同样保存了时区的信息，但仅依赖于系统的 <code>ENV[&#39;TZ&#39;]</code> 环境变量，最多也仅可以切换至 GMT 或 UTC。[^1] 仅可以应付本地化网站、应用的使用场景。一旦涉及国际化场景，多时区的时间处理，Ruby 内置的时间库便显得不太够用。</p>
+<p>[^1]: GMT 格林威治标准时间，UTC 协调世界时，在大多数用途上两者并没有区别，Ruby 中的 Time/DateTime 也将两者一视同仁。</p>
+<p>大多时候你可能根本不会注意到自己正在处理的是 TimeWithZone 还是 DateTime，经过 Rails 对 DateTime 的扩充后，他们有极其相似的实例方法，都可以进行时间区间的加减，也可以实现互相转换。但若因此判断无需纠结 Rails 中时间类型具体的实现，则有些天真了。</p>
+<p>上文提到，两者同样可以处理时间区间的加减，但这其中还是有微妙的区别，当计算不确定长度的时间区间（days, months, years 等）时，夏令时。DateTime 不会考虑任何夏令时规则，因此使用 DateTime 实例加减这些时间区间，即使跨过 夏令时边界，其时间部分及时区部分（%T %z）也不会变化。相应的，当 TimeWithZone 实例的时区处在有夏令时规则的时区时，在加减时间区间中如果跨越了夏令时边界，时区部分会相应的变化，已达到与人类直觉上的一致。</p>
+<p>如果应用中对时间区间计算有精确度要求的话，这个问题就格外需要重视了。他甚至会让你不知不觉得中招，如上文所说，ActiveRecord 对 datetime 数据库类型的对应类型为 TimeWithZone，以下代码我们假设一个 periods 表，记录了一段时间的开始时间和结束时间，并同时假设，某条记录中，根据当前 app 时区，这个开始时间和结束时间跨越了夏令时边界。那么因为 DateTime 和 TimeWithZone 计算上的不统一，在存入表前的计算结果，和从表中取出后重新计算的结果，显然是不一致的。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">start_time = DateTime.current</span><br><span class="line">end_time = start_time + <span class="number">1</span>.month</span><br><span class="line"></span><br><span class="line">Period.create!(<span class="symbol">start_time:</span> start_time, <span class="symbol">end_time:</span> end_time)</span><br><span class="line">period = Period.last</span><br><span class="line"></span><br><span class="line">period.end_time == period.start_time + <span class="number">1</span>.month <span class="comment"># =&gt; not sure!</span></span><br></pre></td></tr></table></figure>
+<p>想避免以上情况有以下可选措施：</p>
+<ol>
+<li>避免自然日，自然月的时间区间计算，尽可能使用准确的时分秒。（推荐）</li>
+<li>在统一的时区下，使用统一的类型计算，如进行计算前统一转换为 DateTime 的 utc 时间，根据显示的需要再对时区进行必要的转换。</li>
+</ol>
+<h2 id="ENV-‘TZ’-vs-config-time-zone"><a href="#ENV-‘TZ’-vs-config-time-zone" class="headerlink" title="ENV[‘TZ’] vs. config.time_zone"></a>ENV[‘TZ’] vs. config.time_zone</h2><p>结论性而言，<code>Time.now</code> 和 <code>DateTime.now</code> 依赖于 <code>ENV[&#39;TZ&#39;]</code> 所设定的时区，而从 DB 中取出的 TimeWithZone, 以及 ActiveSupport 引入的 <code>Time.current</code> 和 <code>DateTime.current</code> 得到的时间的默认时区，是依赖于由 <code>config.time_zone</code> 所设定的应用时区。</p>
+<p>通常而言，虽然时区不同，但两者所对应的时间应该是统一的，同时切换为 UTC 时间后是完全相等的。但不同时区在一定程度上却会造成一些意想不到的混乱。以下是我所遇到过的一个由时区不同所产生的 bug。我们假设现在处于 2018-03-01 10:00:00 +0800，系统时区为上海时区（+0800），应用时区为太平洋时区（-0800），并再次引入我们之前定义过的 periods 表。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">start_time = DateTime.now</span><br><span class="line">end_time = start_time + <span class="number">2</span>.years</span><br><span class="line"></span><br><span class="line">Period.create!(<span class="symbol">start_time:</span> start_time, <span class="symbol">end_time:</span> end_time)</span><br><span class="line">period = Period.last</span><br><span class="line"></span><br><span class="line">period.starts_at.to_datetime + <span class="number">2</span>.years == period.ends_at.to_datetime <span class="comment"># =&gt; false, 1 day difference</span></span><br></pre></td></tr></table></figure>
+<p>如果我说这个 bug 大多数情况下只会四年发生一次，你可能很快就能找到方向。<br>实际原因也确实很傻，因为按照上海时间2018年3月1号前进2年为2020年3月1号，而当经过 DB 的储存读取，开始时间的时区根据应用时区，被转化为 -0800，即使转为 DateTime 也不会有所改变。时区转变后，日期由2018年3月1日相应的变为了2018年2月28日，这实际上也没有任何不妥。但当再次前进2年后，时间变为2020年2月28日，看似依然没有任何问题，但2020年是闰年，2月28日到3月1日之间，有别于2018年，多了2月29日这一天，这一天的时间差也是由此而来。</p>
+<p>解决方案事实上前文也有提到的，如果你对时间计算有严格的要求，还是尽量避免进行自然日，自然月，自然年这一类不确定时间的计算。如果一定需要，也尽量统一在 utc 时间下进行计算，再根据时间显示的需求转换时区。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-vs-DateTime"><span class="toc-number">1.</span> <span class="toc-text">Time vs. DateTime</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DateTime-vs-TimeWithZone"><span class="toc-number">2.</span> <span class="toc-text">DateTime vs. TimeWithZone</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ENV-‘TZ’-vs-config-time-zone"><span class="toc-number">3.</span> <span class="toc-text">ENV[‘TZ’] vs. config.time_zone</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&text=Time, DateTime and TimeWithZone"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&is_video=false&description=Time, DateTime and TimeWithZone"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Time, DateTime and TimeWithZone&body=Check out this article: https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&title=Time, DateTime and TimeWithZone"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/&name=Time, DateTime and TimeWithZone&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2019 Sean Wong
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+    <!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
