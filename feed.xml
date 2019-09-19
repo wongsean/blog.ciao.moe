@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Ciao.moe</title>
+  
+  
+  <link href="/feed.xml" rel="self"/>
+  
+  <link href="https://blog.ciao.moe/"/>
+  <updated>2019-09-19T06:55:29.130Z</updated>
+  <id>https://blog.ciao.moe/</id>
+  
+  <author>
+    <name>Sean Wong</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Time, DateTime and TimeWithZone</title>
+    <link href="https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"/>
+    <id>https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/</id>
+    <published>2018-03-03T04:39:10.000Z</published>
+    <updated>2019-09-19T06:55:29.130Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;如果你开始在 Rails 中开始处理时间，这显然是在实现一个应用中无法避免的，你一定很快就会遇到第一个问题，Rails 中有三个可以表示时间的类 - Time，DateTime and ActiveSupport::TimeWithZone,
+        
+      
+    
+    </summary>
+    
+      <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Ruby Constant Lookup</title>
+    <link href="https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/"/>
+    <id>https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/</id>
+    <published>2017-06-25T09:57:07.000Z</published>
+    <updated>2019-09-19T06:55:29.130Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;写 Ruby on Rails 已有一年有余，随着渐渐开始走进 Rails 的神秘魔法的根源，些许不优雅之处和槽点也可窥见一斑，Rails 作为 Ruby 圈不可避免的重量级框架，似乎在理念上偶尔也与 Ruby
+        
+      
+    
+    </summary>
+    
+      <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+  </entry>
+  
+</feed>
