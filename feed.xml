@@ -6,7 +6,7 @@
   <link href="/feed.xml" rel="self"/>
   
   <link href="https://blog.ciao.moe/"/>
-  <updated>2019-09-19T06:55:29.130Z</updated>
+  <updated>2019-09-24T09:22:18.750Z</updated>
   <id>https://blog.ciao.moe/</id>
   
   <author>
@@ -17,11 +17,39 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Index Signatures</title>
+    <link href="https://blog.ciao.moe/2019/09/24/index-signatures/"/>
+    <id>https://blog.ciao.moe/2019/09/24/index-signatures/</id>
+    <published>2019-09-24T06:04:07.000Z</published>
+    <updated>2019-09-24T09:22:18.750Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;p&gt;Index Signatures 是 typescript 提供的&lt;/p&gt;
+&lt;h2 id=&quot;something-wrong&quot;&gt;Something Wrong&lt;/h2&gt;
+&lt;h3 id=&quot;test2&quot;&gt;test2&lt;/h3&gt;
+&lt;h4
+        
+      
+    
+    </summary>
+    
+    
+      <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>Time, DateTime and TimeWithZone</title>
     <link href="https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"/>
     <id>https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/</id>
     <published>2018-03-03T04:39:10.000Z</published>
-    <updated>2019-09-19T06:55:29.130Z</updated>
+    <updated>2019-09-24T09:15:08.237Z</updated>
     
     <summary type="html">
     
@@ -46,7 +74,7 @@
     <link href="https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/"/>
     <id>https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/</id>
     <published>2017-06-25T09:57:07.000Z</published>
-    <updated>2019-09-19T06:55:29.130Z</updated>
+    <updated>2019-09-24T09:13:36.150Z</updated>
     
     <summary type="html">
     
