@@ -1,7 +1,7 @@
 ---
 title: "Time, DateTime and TimeWithZone"
-date: 2018-03-03 12:39:10 +0800
-categories: 
+date: 2018-03-03 12:39:10
+categories:
   - tech
 ---
 
@@ -16,6 +16,7 @@ categories:
 地位上，Time 来自 Ruby 核心库(core)，无需 `require` 加载即可使用，DateTime 属于 Date 的子类，一同来自于 Ruby 标准库(std-lib)，需要额外 `require 'date'`。
 
 如果查阅到一些过时的资料，可能会看到诸如 “Time 是对 [POSIX time](https://en.wikipedia.org/wiki/Unix_time) 的简单封装，因此只能表示 `1970-01-01 00:00:00 +00:00` 之后的时间”，但实际上自 Ruby 1.9.2，Time 可以表示时间不在受到限制。
+
 > Since Ruby 1.9.2, Time implementation uses a signed 63 bit integer, Bignum or Rational. The integer is a number of nanoseconds since the Epoch which can represent 1823-11-12 to 2116-02-20. When Bignum or Rational is used (before 1823, after 2116, under nanosecond), Time works slower as when integer is used.
 
 在日常使用上 Time 与 DateTime 没有太大的差别，可以处理历史中的年月日，时分秒，星期和时区，已经能涵盖大多是的使用案例，但倘若你要同时考虑一些历史上的历法转变 DateTime 将是你的不二之选，以下是来自 API 文档中的一段示例，如果你看完之后震惊之余，苦思冥想也无法参透其中缘由，别想那么多，那说明你根本用不上他。
@@ -50,6 +51,7 @@ period.end_time == period.start_time + 1.month # => not sure!
 ```
 
 想避免以上情况有以下可选措施：
+
 1. 避免自然日，自然月的时间区间计算，尽可能使用准确的时分秒。（推荐）
 2. 在统一的时区下，使用统一的类型计算，如进行计算前统一转换为 DateTime 的 utc 时间，根据显示的需要再对时区进行必要的转换。
 
@@ -70,9 +72,6 @@ period.starts_at.to_datetime + 2.years == period.ends_at.to_datetime # => false,
 ```
 
 如果我说这个 bug 大多数情况下只会四年发生一次，你可能很快就能找到方向。
-实际原因也确实很傻，因为按照上海时间2018年3月1号前进2年为2020年3月1号，而当经过 DB 的储存读取，开始时间的时区根据应用时区，被转化为 -0800，即使转为 DateTime 也不会有所改变。时区转变后，日期由2018年3月1日相应的变为了2018年2月28日，这实际上也没有任何不妥。但当再次前进2年后，时间变为2020年2月28日，看似依然没有任何问题，但2020年是闰年，2月28日到3月1日之间，有别于2018年，多了2月29日这一天，这一天的时间差也是由此而来。
+实际原因也确实很傻，因为按照上海时间 2018 年 3 月 1 号前进 2 年为 2020 年 3 月 1 号，而当经过 DB 的储存读取，开始时间的时区根据应用时区，被转化为 -0800，即使转为 DateTime 也不会有所改变。时区转变后，日期由 2018 年 3 月 1 日相应的变为了 2018 年 2 月 28 日，这实际上也没有任何不妥。但当再次前进 2 年后，时间变为 2020 年 2 月 28 日，看似依然没有任何问题，但 2020 年是闰年，2 月 28 日到 3 月 1 日之间，有别于 2018 年，多了 2 月 29 日这一天，这一天的时间差也是由此而来。
 
 解决方案事实上前文也有提到的，如果你对时间计算有严格的要求，还是尽量避免进行自然日，自然月，自然年这一类不确定时间的计算。如果一定需要，也尽量统一在 utc 时间下进行计算，再根据时间显示的需求转换时区。
-
-
-

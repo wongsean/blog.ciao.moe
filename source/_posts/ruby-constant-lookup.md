@@ -1,6 +1,6 @@
 ---
 title: "Ruby Constant Lookup"
-date: 2017-06-25 17:57:07 +0800
+date: 2017-06-25 17:57:07
 categories: 
   - tech
 ---
