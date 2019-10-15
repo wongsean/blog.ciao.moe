@@ -6,17 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="description" content="Index Signatures 是 typescript 提供的 Something Wrong test2 test3">
+    <meta name="description" content="TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 [] 访问字段获取值的数据结构，例如 TypeScript 内建类型 Array&amp;lt;T&amp;gt; 中就包含如下实现： 12345interface Array&amp;lt;T&amp;gt; &amp;#123;  ...  [n: number]: T&amp;#125; 同时，在 JavaScript">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Index Signatures">
 <meta property="og:url" content="https://blog.ciao.moe/2019/09/24/index-signatures/index.html">
 <meta property="og:site_name" content="Ciao.moe">
-<meta property="og:description" content="Index Signatures 是 typescript 提供的 Something Wrong test2 test3">
+<meta property="og:description" content="TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 [] 访问字段获取值的数据结构，例如 TypeScript 内建类型 Array&amp;lt;T&amp;gt; 中就包含如下实现： 12345interface Array&amp;lt;T&amp;gt; &amp;#123;  ...  [n: number]: T&amp;#125; 同时，在 JavaScript">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-09-24T09:22:18.750Z">
+<meta property="og:updated_time" content="2019-10-15T12:27:57.305Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Index Signatures">
-<meta name="twitter:description" content="Index Signatures 是 typescript 提供的 Something Wrong test2 test3">
+<meta name="twitter:description" content="TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 [] 访问字段获取值的数据结构，例如 TypeScript 内建类型 Array&amp;lt;T&amp;gt; 中就包含如下实现： 12345interface Array&amp;lt;T&amp;gt; &amp;#123;  ...  [n: number]: T&amp;#125; 同时，在 JavaScript">
     
     
         
@@ -100,7 +100,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#something-wrong"><span class="toc-number">1.</span> <span class="toc-text">Something Wrong</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#test2"><span class="toc-number">1.1.</span> <span class="toc-text">test2</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#test3"><span class="toc-number">1.1.1.</span> <span class="toc-text">test3</span></a></li></ol></li></ol></li></ol>
+      
     </div>
   </span>
 </div>
@@ -144,10 +144,15 @@
   
 
   <div class="content" itemprop="articleBody">
-    <p>Index Signatures 是 typescript 提供的</p>
-<h2 id="something-wrong">Something Wrong</h2>
-<h3 id="test2">test2</h3>
-<h4 id="test3">test3</h4>
+    <p>TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 <code>[]</code> 访问字段获取值的数据结构，例如 TypeScript 内建类型 <code>Array&lt;T&gt;</code> 中就包含如下实现：</p>
+<p><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Array&lt;T&gt; &#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  [n: <span class="built_in">number</span>]: T</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>同时，在 JavaScript 中我们似乎更少用到 Map 类的实例，而更多的是直接构建 object 来实现类似 map 作用的数据结构，TypeScript 中称之为 Record，其类型通常也可以表示为 <code>type Record&lt;K extends keyof any, T&gt; = { [P in K]: T }</code>。</p>
+<p>然而，如果尝试在追求使用 TypeScript 实现类型安全，或是寄希望于代码通过编译就不会有运行时错误产生，则需要小心谨慎的使用，或是避免 Index Signature。这是因为使用 Index Signature 获取的值类型并不正确，例如</p>
+<p><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> map: &#123; [key: <span class="built_in">string</span>]: <span class="built_in">number</span> &#125; = &#123;</span><br><span class="line">  foo: <span class="number">1</span>,</span><br><span class="line">  bar: <span class="number">2</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> value = map[<span class="string">"baz"</span>];</span><br><span class="line"><span class="comment">// value: number</span></span><br></pre></td></tr></table></figure></p>
+<p>这里使用不存在的 key 获取到的结果是 <code>undefined</code>，但由 TypeScript 推导出的值类型并不包含这种可能性， 在 web 应用中我们常常会大量使用到 array 和 map 来批量处理数据，或者映射数据结构， 总难以避免会忘记处理这隐藏在安全类型下危险的 <code>undefined</code>，从而造成不必要的运行时错误。</p>
+<p>其实早在 2017 年初就有人在 <a href="https://github.com/microsoft/TypeScript" target="_blank" rel="noopener">microsoft/TypeScript</a> 提了 <a href="https://github.com/microsoft/TypeScript/issues/13778" target="_blank" rel="noopener">issue</a>。当然也有人随即就提出了谁都能想到的解决方案——修改 Index Signature 的值定义，加上 <code>| undefined</code>。但显然这并不能解决问题， 在定义上面的 map 时，我们仅希望获取值的时候，类型能够明确表示值可能是不存在的，但在值类型定义后加上 <code>| undefined</code>，首先改变了语义，其次也无法阻止往 array 或 map 中添加 <code>undefined</code> 值。</p>
+<p>当然这个问题至今不被解决，一方面是更多的人使用 TypeScript 只是作为一种 JavaScript 的补充，它已经很好的弥补了后者的不足，且作为渐进式类型系统没有迁移门槛；另一方面是 TypeScript 依然需要保持对 JavaScript 代码的完全兼容，这意味着很多 JavaScript 的遗毒势必会影响 TypeScript 构建一个更安全的类型系统，之前讨论 get/set 的也仅是一隅，全面考虑未必能得出优雅的方案。</p>
+<p>我时常想，脱离了 JavaScript 的 TypeScript 应该能成为一门更好的语言，但应该无法成为一门流行的语言，现在的更多是权衡取舍后的结果。当然，最终有些人选择了妥协，有些人选择使用各种 work around 贯彻自己内心的秩序，有的人在心里期盼——愿世界没有 JS。</p>
 
   </div>
 </article>
@@ -173,7 +178,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#something-wrong"><span class="toc-number">1.</span> <span class="toc-text">Something Wrong</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#test2"><span class="toc-number">1.1.</span> <span class="toc-text">test2</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#test3"><span class="toc-number">1.1.1.</span> <span class="toc-text">test3</span></a></li></ol></li></ol></li></ol>
+      
     </div>
 
     <div id="share-footer" style="display: none">

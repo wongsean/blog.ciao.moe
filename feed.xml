@@ -6,7 +6,7 @@
   <link href="/feed.xml" rel="self"/>
   
   <link href="https://blog.ciao.moe/"/>
-  <updated>2019-09-24T09:22:18.750Z</updated>
+  <updated>2019-10-15T12:27:57.305Z</updated>
   <id>https://blog.ciao.moe/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://blog.ciao.moe/2019/09/24/index-signatures/"/>
     <id>https://blog.ciao.moe/2019/09/24/index-signatures/</id>
     <published>2019-09-24T06:04:07.000Z</published>
-    <updated>2019-09-24T09:22:18.750Z</updated>
+    <updated>2019-10-15T12:27:57.305Z</updated>
     
     <summary type="html">
     
@@ -29,10 +29,7 @@
       
         
         
-          &lt;p&gt;Index Signatures 是 typescript 提供的&lt;/p&gt;
-&lt;h2 id=&quot;something-wrong&quot;&gt;Something Wrong&lt;/h2&gt;
-&lt;h3 id=&quot;test2&quot;&gt;test2&lt;/h3&gt;
-&lt;h4
+          &lt;p&gt;TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 &lt;code&gt;[]&lt;/code&gt; 访问字段获取值的数据结构，例如 TypeScript 内建类型 &lt;code&gt;Array&amp;lt;T&amp;gt;&lt;/code&gt;
         
       
     
