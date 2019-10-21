@@ -13,9 +13,9 @@ categories:
 
 相对于 TimeWithZone 随 Ruby 一同安装后开箱即用的 Time 和 DateTime 可能是你第一个使用过的时间相关的类，你应该和我一样困惑过，他们有什么区别，在应用中我应该使用哪一个？
 
-地位上，Time 来自 Ruby 核心库(core)，无需 `require` 加载即可使用，DateTime 属于 Date 的子类，一同来自于 Ruby 标准库(std-lib)，需要额外 `require 'date'`。
+地位上，Time 来自 Ruby 核心库(core)，无需`require`加载即可使用，DateTime 属于 Date 的子类，一同来自于 Ruby 标准库(std-lib)，需要额外`require 'date'`。
 
-如果查阅到一些过时的资料，可能会看到诸如 “Time 是对 [POSIX time](https://en.wikipedia.org/wiki/Unix_time) 的简单封装，因此只能表示 `1970-01-01 00:00:00 +00:00` 之后的时间”，但实际上自 Ruby 1.9.2，Time 可以表示时间不在受到限制。
+如果查阅到一些过时的资料，可能会看到诸如 “Time 是对 [POSIX time](https://en.wikipedia.org/wiki/Unix_time) 的简单封装，因此只能表示`1970-01-01 00:00:00 +00:00`之后的时间”，但实际上自 Ruby 1.9.2，Time 可以表示时间不在受到限制。
 
 > Since Ruby 1.9.2, Time implementation uses a signed 63 bit integer, Bignum or Rational. The integer is a number of nanoseconds since the Epoch which can represent 1823-11-12 to 2116-02-20. When Bignum or Rational is used (before 1823, after 2116, under nanosecond), Time works slower as when integer is used.
 
@@ -30,7 +30,7 @@ cervantes = DateTime.iso8601('1616-04-23', Date::ITALY)
 
 ## DateTime vs. TimeWithZone
 
-ActiveSupport::TimeWithZone（以下简称 TimeWithZone）作为 ActiveRecord 中 datetime 数据库类型的默认对应类型，旨在让 Rails 开发者更方便的处理时区。尽管 Time 和 DateTime 同样保存了时区的信息，但仅依赖于系统的 `ENV['TZ']` 环境变量，最多也仅可以切换至 GMT 或 UTC。[^1] 仅可以应付本地化网站、应用的使用场景。一旦涉及国际化场景，多时区的时间处理，Ruby 内置的时间库便显得不太够用。
+ActiveSupport::TimeWithZone（以下简称 TimeWithZone）作为 ActiveRecord 中 datetime 数据库类型的默认对应类型，旨在让 Rails 开发者更方便的处理时区。尽管 Time 和 DateTime 同样保存了时区的信息，但仅依赖于系统的`ENV['TZ']`环境变量，最多也仅可以切换至 GMT 或 UTC。[^1] 仅可以应付本地化网站、应用的使用场景。一旦涉及国际化场景，多时区的时间处理，Ruby 内置的时间库便显得不太够用。
 
 [^1]: GMT 格林威治标准时间，UTC 协调世界时，在大多数用途上两者并没有区别，Ruby 中的 Time/DateTime 也将两者一视同仁。
 
@@ -57,7 +57,7 @@ period.end_time == period.start_time + 1.month # => not sure!
 
 ## ENV['TZ'] vs. config.time_zone
 
-结论性而言，`Time.now` 和 `DateTime.now` 依赖于 `ENV['TZ']` 所设定的时区，而从 DB 中取出的 TimeWithZone, 以及 ActiveSupport 引入的 `Time.current` 和 `DateTime.current` 得到的时间的默认时区，是依赖于由 `config.time_zone` 所设定的应用时区。
+结论性而言，`Time.now`和`DateTime.now`依赖于`ENV['TZ']`所设定的时区，而从 DB 中取出的 TimeWithZone, 以及 ActiveSupport 引入的`Time.current`和`DateTime.current`得到的时间的默认时区，是依赖于由`config.time_zone`所设定的应用时区。
 
 通常而言，虽然时区不同，但两者所对应的时间应该是统一的，同时切换为 UTC 时间后是完全相等的。但不同时区在一定程度上却会造成一些意想不到的混乱。以下是我所遇到过的一个由时区不同所产生的 bug。我们假设现在处于 2018-03-01 10:00:00 +0800，系统时区为上海时区（+0800），应用时区为太平洋时区（-0800），并再次引入我们之前定义过的 periods 表。
 
