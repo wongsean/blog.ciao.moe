@@ -1565,7 +1565,7 @@ pre code {
   border: none;
 }
 code {
-  padding: 0 3px;
+  padding: 0 0.25em;
   background: #dedcd9;
   font-family: "fira code";
 }
