@@ -6,7 +6,7 @@
   <link href="/feed.xml" rel="self"/>
   
   <link href="https://blog.ciao.moe/"/>
-  <updated>2019-10-21T03:45:10.210Z</updated>
+  <updated>2019-10-21T05:09:39.919Z</updated>
   <id>https://blog.ciao.moe/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://blog.ciao.moe/2019/09/24/index-signatures/"/>
     <id>https://blog.ciao.moe/2019/09/24/index-signatures/</id>
     <published>2019-09-24T06:04:07.000Z</published>
-    <updated>2019-10-21T03:45:10.210Z</updated>
+    <updated>2019-10-21T05:09:39.919Z</updated>
     
     <summary type="html">
     
@@ -29,7 +29,7 @@
       
         
         
-          &lt;p&gt;TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号 &lt;code&gt;[]&lt;/code&gt; 访问字段获取值的数据结构，例如 TypeScript 内建类型 &lt;code&gt;Array&amp;lt;T&amp;gt;&lt;/code&gt;
+          &lt;p&gt;TypeScript 中的 Index Signature 的使用场景不可以说不频繁。例如，其可以用来表示可以通过方括号&lt;code&gt;[]&lt;/code&gt;访问字段获取值的数据结构，例如 TypeScript
         
       
     
@@ -46,7 +46,7 @@
     <link href="https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/"/>
     <id>https://blog.ciao.moe/2018/03/03/time-datetime-timewithzone/</id>
     <published>2018-03-03T04:39:10.000Z</published>
-    <updated>2019-09-24T09:15:08.237Z</updated>
+    <updated>2019-10-21T05:16:42.669Z</updated>
     
     <summary type="html">
     
@@ -71,7 +71,7 @@
     <link href="https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/"/>
     <id>https://blog.ciao.moe/2017/06/25/ruby-constant-lookup/</id>
     <published>2017-06-25T09:57:07.000Z</published>
-    <updated>2019-09-24T09:13:36.150Z</updated>
+    <updated>2019-10-21T05:14:44.094Z</updated>
     
     <summary type="html">
     
