@@ -82,10 +82,9 @@ markdown:
     - markdown-it-sup
   anchors:
     level: 2
-    collisionSuffix: 'v'
+    collisionSuffix: "v"
     permalink: false
 
-  
 ## Themes: https://hexo.io/themes/
 theme: cactus
 theme_config:
@@ -103,6 +102,10 @@ theme_config:
   social_links:
     github: https://github.com/wongsean
     steam: https://steamcommunity.com/id/platokon
+
+  google_analytics:
+    enabled: true
+    id: "UA-75928641-1"
 
   rss:
 
