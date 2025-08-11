@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Ciao.moe</title>
+  
+  
+  <link href="https://blog.ciao.moe/feed.xml" rel="self"/>
+  
+  <link href="https://blog.ciao.moe/"/>
+  <updated>2025-08-11T08:20:32.461Z</updated>
+  <id>https://blog.ciao.moe/</id>
+  
+  <author>
+    <name>Xianglei Wong</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>The undefined Behind Index Signatures in Typescript</title>
+    <link href="https://blog.ciao.moe/en/2019/09/24/index-signatures/"/>
+    <id>https://blog.ciao.moe/en/2019/09/24/index-signatures/</id>
+    <published>2019-09-24T06:04:07.000Z</published>
+    <updated>2025-08-11T08:20:32.461Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Update Note&lt;/strong&gt;: TypeScript 4.1 introduced the &lt;code&gt;noUncheckedIndexedAccess&lt;/code&gt; compiler option, which</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="typescript" scheme="https://blog.ciao.moe/tags/typescript/"/>
+    
+    <category term="type-safety" scheme="https://blog.ciao.moe/tags/type-safety/"/>
+    
+    <category term="javascript" scheme="https://blog.ciao.moe/tags/javascript/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>被 TypeScript 索引签名掩盖的 undefined</title>
+    <link href="https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/"/>
+    <id>https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/</id>
+    <published>2019-09-24T06:04:07.000Z</published>
+    <updated>2025-08-11T08:19:47.223Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;更新说明&lt;/strong&gt;: TypeScript 4.1 引入了 &lt;code&gt;noUncheckedIndexedAccess&lt;/code&gt; 编译选项，可以在一定程度上缓解本文讨论的问题。启用此选项后，Index</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="typescript" scheme="https://blog.ciao.moe/tags/typescript/"/>
+    
+    <category term="type-safety" scheme="https://blog.ciao.moe/tags/type-safety/"/>
+    
+    <category term="javascript" scheme="https://blog.ciao.moe/tags/javascript/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Time vs DateTime vs TimeWithZone in Rails</title>
+    <link href="https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/"/>
+    <id>https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/</id>
+    <published>2018-03-03T04:39:10.000Z</published>
+    <updated>2025-08-11T08:32:41.585Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;When building Rails applications, time handling is a challenge that almost every developer will encounter. When you first start dealing</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="ruby" scheme="https://blog.ciao.moe/tags/ruby/"/>
+    
+    <category term="rails" scheme="https://blog.ciao.moe/tags/rails/"/>
+    
+    <category term="timezone" scheme="https://blog.ciao.moe/tags/timezone/"/>
+    
+    <category term="datetime" scheme="https://blog.ciao.moe/tags/datetime/"/>
+    
+    <category term="activerecord" scheme="https://blog.ciao.moe/tags/activerecord/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Rails 中时间类的差异：Time, DateTime 与 TimeWithZone</title>
+    <link href="https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone-zh-cn/"/>
+    <id>https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone-zh-cn/</id>
+    <published>2018-03-03T04:39:10.000Z</published>
+    <updated>2025-08-11T08:32:28.929Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;在构建 Rails 应用时，时间处理几乎是每个开发者都会遇到的挑战。当你第一次在 Rails 中处理时间相关的功能时，很快就会发现一个令人困惑的问题：Rails 中有三个用于表示时间的类——Time、DateTime 和</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="ruby" scheme="https://blog.ciao.moe/tags/ruby/"/>
+    
+    <category term="rails" scheme="https://blog.ciao.moe/tags/rails/"/>
+    
+    <category term="timezone" scheme="https://blog.ciao.moe/tags/timezone/"/>
+    
+    <category term="datetime" scheme="https://blog.ciao.moe/tags/datetime/"/>
+    
+    <category term="activerecord" scheme="https://blog.ciao.moe/tags/activerecord/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Ruby Constant Lookup Mechanism</title>
+    <link href="https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/"/>
+    <id>https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/</id>
+    <published>2017-06-25T09:57:07.000Z</published>
+    <updated>2025-08-11T08:36:32.575Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Update Note&lt;/strong&gt;: Starting from Ruby 2.5.0, incorrect top-level constant references will directly throw an</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="ruby" scheme="https://blog.ciao.moe/tags/ruby/"/>
+    
+    <category term="rails" scheme="https://blog.ciao.moe/tags/rails/"/>
+    
+    <category term="metaprogramming" scheme="https://blog.ciao.moe/tags/metaprogramming/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Ruby 常量查找机制</title>
+    <link href="https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/"/>
+    <id>https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/</id>
+    <published>2017-06-25T09:57:07.000Z</published>
+    <updated>2025-08-11T08:36:23.807Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;更新说明&lt;/strong&gt;: 从 Ruby 2.5.0 开始，顶层常量的错误引用会直接抛出异常而不是仅给出警告。不过本文内容基于 2017 年的 Ruby 版本，讨论的是更新前的行为逻辑，这对理解 Ruby</summary>
+        
+      
+    
+    
+    
+    <category term="tech" scheme="https://blog.ciao.moe/categories/tech/"/>
+    
+    
+    <category term="ruby" scheme="https://blog.ciao.moe/tags/ruby/"/>
+    
+    <category term="rails" scheme="https://blog.ciao.moe/tags/rails/"/>
+    
+    <category term="metaprogramming" scheme="https://blog.ciao.moe/tags/metaprogramming/"/>
+    
+  </entry>
+  
+</feed>

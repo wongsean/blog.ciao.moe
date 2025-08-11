@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Update Note: Starting from Ruby 2.5.0, incorrect top-level constant references will directly throw an exception instead of just giving a warning. However, this article is based on Ruby versions from">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ruby Constant Lookup Mechanism">
+<meta property="og:url" content="https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/index.html">
+<meta property="og:site_name" content="Ciao.moe">
+<meta property="og:description" content="Update Note: Starting from Ruby 2.5.0, incorrect top-level constant references will directly throw an exception instead of just giving a warning. However, this article is based on Ruby versions from">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-06-25T09:57:07.000Z">
+<meta property="article:modified_time" content="2025-08-11T08:36:32.575Z">
+<meta property="article:author" content="Xianglei Wong">
+<meta property="article:tag" content="ruby">
+<meta property="article:tag" content="rails">
+<meta property="article:tag" content="metaprogramming">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Ruby Constant Lookup Mechanism</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75928641-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-75928641-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/feed.xml" title="Ciao.moe" type="application/atom+xml">
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/en/2018/03/03/time-datetime-timewithzone-zh-cn/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/en/2017/06/25/ruby-constant-lookup-zh-cn/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&text=Ruby Constant Lookup Mechanism"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&is_video=false&description=Ruby Constant Lookup Mechanism"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ruby Constant Lookup Mechanism&body=Check out this article: https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&name=Ruby Constant Lookup Mechanism&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&t=Ruby Constant Lookup Mechanism"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Constant-Definition-and-Storage"><span class="toc-number">1.</span> <span class="toc-text">Constant Definition and Storage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Scope-Nesting-and-Module-nesting"><span class="toc-number">2.</span> <span class="toc-text">Scope Nesting and Module.nesting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Inheritance-Tree-Lookup-Mechanism"><span class="toc-number">3.</span> <span class="toc-text">Inheritance Tree Lookup Mechanism</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Top-level-Constant-Lookup-Mechanism"><span class="toc-number">4.</span> <span class="toc-text">Top-level Constant Lookup Mechanism</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Constant-Lookup-Pitfalls"><span class="toc-number">5.</span> <span class="toc-text">Constant Lookup Pitfalls</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">6.</span> <span class="toc-text">Summary</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Ruby Constant Lookup Mechanism
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Xianglei Wong</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2017-06-25T09:57:07.000Z" class="dt-published" itemprop="datePublished">2017-06-25</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/tech/">tech</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/metaprogramming/" rel="tag">metaprogramming</a>, <a class="p-category" href="/tags/rails/" rel="tag">rails</a>, <a class="p-category" href="/tags/ruby/" rel="tag">ruby</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <blockquote>
+<p><strong>Update Note</strong>: Starting from Ruby 2.5.0, incorrect top-level constant references will directly throw an exception instead of just giving a warning. However, this article is based on Ruby versions from 2017, discussing the pre-update behavior logic, which is still valuable for understanding the essential mechanisms of Ruby constant lookup.</p>
+</blockquote>
+<p>I’ve been writing Ruby on Rails for over a year now, and as I gradually started diving into the mysterious magic behind Rails, I found that many issues are related to Ruby’s constant lookup mechanism. To be honest, this mechanism is more complex than I initially thought, especially in Rails’ autoloading environment where it’s easy to step into some hidden pitfalls.</p>
+<p>This article wants to explore Ruby’s constant definition, storage, and lookup mechanisms, from basic concepts to some edge cases, hoping to help everyone build a fairly complete understanding of Ruby’s constant system. We’ll use practical code examples to deeply understand how the Ruby interpreter works internally.</p>
+<h2 id="Constant-Definition-and-Storage">Constant Definition and Storage</h2>
+<p>To understand Ruby’s constant lookup process, we first need to understand how Ruby defines and stores constants.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># module is a constant</span></span><br><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span></span><br><span class="line">  <span class="comment"># class is also a constant</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Something</span></span><br><span class="line">    <span class="comment"># still a constant</span></span><br><span class="line">    <span class="variable constant_">SOME_VALUE</span> = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>Ruby also has the concept of lexical scope, but unlike most languages, the <code>module</code> and <code>class</code> keywords open entirely new scopes. In the code above, the constant <code>SOME_VALUE</code> is defined within the <code>class Something</code> scope, so where is this constant actually stored?</p>
+<p>In Ruby MRI’s implementation, each Ruby class corresponds to an RCLASS C structure, and constants defined in this scope are recorded in this structure. We can see what constants are defined in <code>Something</code> using <code>Namespace::Something.constants(false)</code><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> in irb.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">irb(main):008:0&gt;</span> <span class="title class_">Namespace</span><span class="symbol">:</span><span class="symbol">:Something</span>.constants</span><br><span class="line">=&gt; [<span class="symbol">:SOME_VALUE</span>]</span><br></pre></td></tr></table></figure>
+<p>Naturally, <code>class Something</code> itself is also a constant, defined in the <code>module Namespace</code> scope.</p>
+<p>Thinking further, where is the top-level <code>module Namespace</code> stored? The answer is they’re stored in <code>Object</code>’s constant table. Using <code>Object.constants(false)</code> you can see all the top-level constants you’ve defined.</p>
+<h2 id="Scope-Nesting-and-Module-nesting">Scope Nesting and Module.nesting</h2>
+<p>As mentioned earlier, whenever <code>module</code> or <code>class</code> keywords appear, Ruby opens a new scope, forming multiple nested structures.</p>
+<p>In Ruby’s C implementation, there’s a structure called <code>rb_cref_t</code><sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup> that represents the current scope:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">rb_cref_struct</span> &#123;</span></span><br><span class="line">    VALUE flags;</span><br><span class="line">    <span class="type">const</span> VALUE refinements;</span><br><span class="line">    <span class="type">const</span> VALUE klass;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rb_cref_struct</span> * <span class="title">const</span> <span class="title">next</span>;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">rb_scope_visibility_t</span> scope_visi;</span><br><span class="line">&#125; <span class="type">rb_cref_t</span>;</span><br></pre></td></tr></table></figure>
+<p>Here, the <code>klass</code> attribute represents which class/module the current scope is, and <code>next</code> points to the cref structure representing the upper-level scope. The linked list formed through <code>next</code> pointers clearly represents the hierarchical relationship from the current scope to the top-level scope. In irb, we can view the klass values of this linked list using <code>Module.nesting</code>.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> A</span><br><span class="line">  <span class="keyword">class</span> B</span><br><span class="line">    <span class="keyword">class</span> C</span><br><span class="line">      p <span class="title class_">Module</span>.nesting <span class="comment"># =&gt; [A::B::C, A::B, A]</span></span><br><span class="line"></span><br><span class="line">      p B == <span class="symbol">:</span><span class="symbol">:A</span><span class="symbol">:</span><span class="symbol">:B</span> <span class="comment"># =&gt; true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>When we try to access constant <code>B</code> in the above code, Ruby searches in the order shown by <code>Module.nesting</code>: first checking <code>A::B::C</code>’s constant table (not found), then searching <code>A::B</code>’s constant table (also not found), and finally finding the definition of <code>B</code> in <code>A</code>’s constant table.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> A; <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> A::B</span><br><span class="line">  <span class="keyword">class</span> C</span><br><span class="line">    p <span class="title class_">Module</span>.nesting <span class="comment"># =&gt; [A::B::C, A::B]</span></span><br><span class="line"></span><br><span class="line">    p B == <span class="symbol">:</span><span class="symbol">:A</span><span class="symbol">:</span><span class="symbol">:B</span> <span class="comment"># =&gt; ???</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>Can you guess the result of this code? It will throw an exception: <code>NameError: uninitialized constant A::B::C::B</code></p>
+<h2 id="Inheritance-Tree-Lookup-Mechanism">Inheritance Tree Lookup Mechanism</h2>
+<p>Searching through the scope chain alone isn’t enough; we also need to access constants defined in superclasses from subclasses.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in base&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Sub</span> &lt; <span class="title class_ inherited__">Base</span></span><br><span class="line">  p <span class="variable constant_">CONST</span> <span class="comment"># =&gt; constant in base</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">p <span class="title class_">Sub</span><span class="symbol">:</span><span class="symbol">:CONST</span> <span class="comment"># =&gt; constant in base</span></span><br></pre></td></tr></table></figure>
+<p>This is easy to understand - Ruby also searches for constants through the inheritance tree. Ruby searches along the inheritance chain of the current scope class<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>. We can see the inheritance tree structure using <code>Sub.ancestors</code>.</p>
+<p>This raises a key question: if both the parent scope and superclass have definitions of the same constant, which one does Ruby choose? Let’s verify:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in base&#x27;</span></span><br><span class="line">  <span class="variable constant_">CONST_1</span> = <span class="number">1</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in namespace&#x27;</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Sub</span> &lt; <span class="title class_ inherited__">Base</span></span><br><span class="line">    p <span class="title class_">Module</span>.constants</span><br><span class="line">    p <span class="variable constant_">CONST</span> <span class="comment"># =&gt; &#x27;constant in namespace&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  p <span class="title class_">Sub</span><span class="symbol">:</span><span class="symbol">:CONST</span>  <span class="comment"># =&gt; &#x27;constant in base&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>The first statement <code>p CONST</code> outputs ‘constant in namespace’, showing that Ruby prioritizes searching in the scope chain before the inheritance tree.</p>
+<p>The second statement <code>p Namespace::Sub::CONST</code> looks similar but produces different output. When executing this statement, Ruby first finds constant <code>Sub</code>, then looks for constant <code>CONST</code> under <code>Sub</code>. At this point, Ruby no longer considers the scope chain but directly searches <code>Sub</code>’s inheritance tree. These two ways of searching for <code>CONST</code> have other subtle differences, which will be explained in detail later.</p>
+<h2 id="Top-level-Constant-Lookup-Mechanism">Top-level Constant Lookup Mechanism</h2>
+<p>Wait, seems like we missed something? Through <code>Module.nesting</code>, we can’t see top-level scope constants, so how are top-level constants queried? Does Ruby have special handling for top-level constants?</p>
+<p>The answer to this question is both yes and no.</p>
+<p>Actually, Ruby finds these top-level constants through the inheritance tree. As mentioned earlier, Ruby stores top-level constants in <code>Object</code>.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span></span><br><span class="line">  p <span class="title class_">Math</span><span class="symbol">:</span><span class="symbol">:PI</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>So in the above code, when we access the top-level constant <code>Math</code> in <code>MyClass</code>’s class scope, Ruby finds the top-level constants stored in <code>Object</code> through <code>MyClass</code>’s inheritance tree.</p>
+<p>It seems the problem is solved! We don’t need to introduce new rules to handle top-level constant lookup, which is indeed worth celebrating.</p>
+<p>But is the problem really completely solved?</p>
+<p>If you’re familiar with Ruby’s internal inheritance tree structure, you’ll notice that <code>Object</code> is not at the top of the inheritance tree. More importantly, when we define modules that are often used as namespaces, their inheritance tree might contain only themselves!</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span>; <span class="keyword">end</span></span><br><span class="line">p <span class="title class_">Namespace</span>.ancestors <span class="comment"># =&gt; [Namespace]</span></span><br></pre></td></tr></table></figure>
+<p>This is indeed problematic! We definitely need to access top-level constants in these module scopes. So, Ruby adds special handling to the inheritance tree search logic: if it’s a module, search once more from <code>Object</code>’s inheritance tree! This indeed solves the problem. As for those classes positioned above <code>Object</code> in the inheritance tree (like <code>Kernel</code>, <code>BasicObject</code>), their special behavior is very likely intentional.</p>
+<p>In fact, this is also why <code>BasicObject</code> class scope is often used as a special, clean scope.</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BasicObject</span></span><br><span class="line">  p <span class="title class_">String</span> <span class="comment"># =&gt; NameError: uninitialized constant BasicObject::String</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h2 id="Constant-Lookup-Pitfalls">Constant Lookup Pitfalls</h2>
+<p>Let’s look at an interesting example:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Hash</span></span><br><span class="line">  p <span class="title class_">String</span> == <span class="title class_">Hash</span><span class="symbol">:</span><span class="symbol">:String</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>Accessing top-level constants (here <code>String</code>) in a class scope (here <code>Hash</code>) meets our previous expectations. But what is <code>Hash::String</code>? Obviously, no such class exists. When we expect this code to throw an exception, we might be surprised by the following result:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(irb)<span class="symbol">:</span><span class="number">21</span>: <span class="symbol">warning:</span> toplevel constant <span class="title class_">String</span> referenced by <span class="title class_">Hash</span><span class="symbol">:</span><span class="symbol">:String</span></span><br><span class="line"><span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>How is this possible?</p>
+<p>The reason is actually simple: these two query processes for the <code>String</code> constant are extremely similar in the inheritance tree search step. Both try to find the definition of constant <code>String</code> in <code>Hash</code>, and when not found, both search up the inheritance tree, ultimately both finding <code>Object</code>.</p>
+<p>Does this cause problems?</p>
+<p>Yes, especially in Rails autoloading environments. Since Rails autoloading depends on the implementation of <code>const_missing</code>, when a top-level constant with the same name has already been loaded, the program might incorrectly reference your constant to that top-level constant, only giving a warning message that’s easily overlooked in massive logs. The following code example is from the <a href="http://guides.rubyonrails.org/autoloading_and_reloading_constants.html#when-constants-aren-t-missed">Rails official documentation</a><sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup>:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># app/models/hotel.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Hotel</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># app/models/image.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Image</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># app/models/hotel/image.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Hotel</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Image</span> &lt; <span class="title class_ inherited__">Image</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ bin/rails r <span class="string">&#x27;Image; p Hotel::Image&#x27;</span> 2&gt;/dev/null</span><br><span class="line">Image <span class="comment"># NOT Hotel::Image!</span></span><br></pre></td></tr></table></figure>
+<h2 id="Summary">Summary</h2>
+<p>Ruby’s constant lookup mechanism follows the following priority order:</p>
+<ol>
+<li><strong>Scope Chain Lookup</strong>: Search from the current scope to outer scopes level by level according to <code>Module.nesting</code> order</li>
+<li><strong>Inheritance Tree Lookup</strong>: Search up the inheritance chain of the current scope class</li>
+<li><strong>Special Handling</strong>: For modules, additionally search for top-level constants from <code>Object</code>’s inheritance tree</li>
+</ol>
+<p>This is what I’ve learned about Ruby’s constant lookup mechanism. I’ve compiled my findings here in hopes it might help others who encounter similar confusion.</p>
+<p>That’s it!</p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>There are typically two <code>constants</code> methods. This specifically refers to the <strong>instance</strong> method defined in <code>Module</code>. When the parameter <code>inherit = false</code>, this method will only list constant names stored in the class’s constant table. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>Based on Ruby 2.4 implementation; before Ruby 2.3, it was a <code>NODE</code> structure <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>Note that the starting point of the inheritance tree is not <code>self.class</code> but the current scope class <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn4" class="footnote-item"><p>Fortunately, Ruby 2.5.0 finally changed the warning to directly throw an exception <a href="#fnref4" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Constant-Definition-and-Storage"><span class="toc-number">1.</span> <span class="toc-text">Constant Definition and Storage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Scope-Nesting-and-Module-nesting"><span class="toc-number">2.</span> <span class="toc-text">Scope Nesting and Module.nesting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Inheritance-Tree-Lookup-Mechanism"><span class="toc-number">3.</span> <span class="toc-text">Inheritance Tree Lookup Mechanism</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Top-level-Constant-Lookup-Mechanism"><span class="toc-number">4.</span> <span class="toc-text">Top-level Constant Lookup Mechanism</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Constant-Lookup-Pitfalls"><span class="toc-number">5.</span> <span class="toc-text">Constant Lookup Pitfalls</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">6.</span> <span class="toc-text">Summary</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&text=Ruby Constant Lookup Mechanism"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&is_video=false&description=Ruby Constant Lookup Mechanism"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ruby Constant Lookup Mechanism&body=Check out this article: https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&title=Ruby Constant Lookup Mechanism"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&name=Ruby Constant Lookup Mechanism&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup/&t=Ruby Constant Lookup Mechanism"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2025
+    Xianglei Wong
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="更新说明: 从 Ruby 2.5.0 开始，顶层常量的错误引用会直接抛出异常而不是仅给出警告。不过本文内容基于 2017 年的 Ruby 版本，讨论的是更新前的行为逻辑，这对理解 Ruby 常量查找的本质机制仍然很有价值。  写 Ruby on Rails 已经有一年多了，随着渐渐开始走进 Rails 神秘魔法的根源，发现很多问题都跟 Ruby 的常量查找机制有关。说实话，这个机制比想象中要复杂">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ruby 常量查找机制">
+<meta property="og:url" content="https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/index.html">
+<meta property="og:site_name" content="Ciao.moe">
+<meta property="og:description" content="更新说明: 从 Ruby 2.5.0 开始，顶层常量的错误引用会直接抛出异常而不是仅给出警告。不过本文内容基于 2017 年的 Ruby 版本，讨论的是更新前的行为逻辑，这对理解 Ruby 常量查找的本质机制仍然很有价值。  写 Ruby on Rails 已经有一年多了，随着渐渐开始走进 Rails 神秘魔法的根源，发现很多问题都跟 Ruby 的常量查找机制有关。说实话，这个机制比想象中要复杂">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-06-25T09:57:07.000Z">
+<meta property="article:modified_time" content="2025-08-11T08:36:23.807Z">
+<meta property="article:author" content="Xianglei Wong">
+<meta property="article:tag" content="ruby">
+<meta property="article:tag" content="rails">
+<meta property="article:tag" content="metaprogramming">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Ruby 常量查找机制</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75928641-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-75928641-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/feed.xml" title="Ciao.moe" type="application/atom+xml">
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/en/2017/06/25/ruby-constant-lookup/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&text=Ruby 常量查找机制"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&is_video=false&description=Ruby 常量查找机制"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ruby 常量查找机制&body=Check out this article: https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&name=Ruby 常量查找机制&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&t=Ruby 常量查找机制"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%AD%98%E5%82%A8"><span class="toc-number">1.</span> <span class="toc-text">常量的定义与存储</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%B5%8C%E5%A5%97%E4%B8%8E-Module-nesting"><span class="toc-number">2.</span> <span class="toc-text">作用域嵌套与 Module.nesting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF%E6%A0%91%E6%9F%A5%E6%89%BE%E6%9C%BA%E5%88%B6"><span class="toc-number">3.</span> <span class="toc-text">继承树查找机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B6%E5%B1%82%E5%B8%B8%E9%87%8F%E7%9A%84%E6%9F%A5%E6%89%BE%E6%9C%BA%E5%88%B6"><span class="toc-number">4.</span> <span class="toc-text">顶层常量的查找机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F%E6%9F%A5%E6%89%BE%E7%9A%84%E9%99%B7%E9%98%B1"><span class="toc-number">5.</span> <span class="toc-text">常量查找的陷阱</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Ruby 常量查找机制
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Xianglei Wong</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2017-06-25T09:57:07.000Z" class="dt-published" itemprop="datePublished">2017-06-25</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/tech/">tech</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/metaprogramming/" rel="tag">metaprogramming</a>, <a class="p-category" href="/tags/rails/" rel="tag">rails</a>, <a class="p-category" href="/tags/ruby/" rel="tag">ruby</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <blockquote>
+<p><strong>更新说明</strong>: 从 Ruby 2.5.0 开始，顶层常量的错误引用会直接抛出异常而不是仅给出警告。不过本文内容基于 2017 年的 Ruby 版本，讨论的是更新前的行为逻辑，这对理解 Ruby 常量查找的本质机制仍然很有价值。</p>
+</blockquote>
+<p>写 Ruby on Rails 已经有一年多了，随着渐渐开始走进 Rails 神秘魔法的根源，发现很多问题都跟 Ruby 的常量查找机制有关。说实话，这个机制比想象中要复杂一些，特别是在 Rails 的 autoloading 环境下，很容易踩到一些隐蔽的坑。</p>
+<p>这篇文章想聊聊 Ruby 常量的定义、存储和查找机制，从基础概念到一些边界情况，希望能帮助大家对 Ruby 的常量系统有个比较完整的认识。我们会通过一些实际的代码例子，深入了解 Ruby 解释器内部是怎么工作的。</p>
+<h2 id="常量的定义与存储">常量的定义与存储</h2>
+<p>要理解 Ruby 的常量查找过程，首先需要了解 Ruby 如何定义和存储常量。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># module is a constant</span></span><br><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span></span><br><span class="line">  <span class="comment"># class is also a constant</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Something</span></span><br><span class="line">    <span class="comment"># still a constant</span></span><br><span class="line">    <span class="variable constant_">SOME_VALUE</span> = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>Ruby 中也有词法作用域的概念，不过跟大多数语言不太一样，<code>module</code> 和 <code>class</code> 关键字会打开一个全新的作用域。上面代码中的常量 <code>SOME_VALUE</code> 是在 <code>class Something</code> 作用域中定义的，那它实际上存储在哪里呢？</p>
+<p>在 Ruby MRI 的实现中，每个 Ruby class 都对应一个 RCLASS 的 C 结构体，这个作用域中定义的常量都会记录在这个结构体里。我们可以在 irb 中通过 <code>Namespace::Something.constants(false)</code><sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> 来看看 <code>Something</code> 里定义了哪些常量。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">irb(main):008:0&gt;</span> <span class="title class_">Namespace</span><span class="symbol">:</span><span class="symbol">:Something</span>.constants</span><br><span class="line">=&gt; [<span class="symbol">:SOME_VALUE</span>]</span><br></pre></td></tr></table></figure>
+<p>很自然地，<code>class Something</code> 本身也是一个常量，定义在 <code>module Namespace</code> 作用域中。</p>
+<p>那再进一步想，顶级作用域中的 <code>module Namespace</code> 又存储在哪里呢？答案是它们存储在 <code>Object</code> 的常量表中。用 <code>Object.constants(false)</code> 就能看到所有你定义的顶层常量。</p>
+<h2 id="作用域嵌套与-Module-nesting">作用域嵌套与 Module.nesting</h2>
+<p>前面说过，每当遇到 <code>module</code> 或 <code>class</code> 关键字时，Ruby 就会打开一个新作用域，这样就形成了多层嵌套的结构。</p>
+<p>在 Ruby 的 C 实现中，有个叫 <code>rb_cref_t</code><sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup> 的结构体用来表示当前作用域：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">rb_cref_struct</span> &#123;</span></span><br><span class="line">    VALUE flags;</span><br><span class="line">    <span class="type">const</span> VALUE refinements;</span><br><span class="line">    <span class="type">const</span> VALUE klass;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rb_cref_struct</span> * <span class="title">const</span> <span class="title">next</span>;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">rb_scope_visibility_t</span> scope_visi;</span><br><span class="line">&#125; <span class="type">rb_cref_t</span>;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>klass</code> 属性表示当前作用域是哪个 class/module，<code>next</code> 指向上一层作用域的 cref 结构体。通过 <code>next</code> 指针形成的链表很清楚地表示了从当前作用域到顶级作用域的层级关系。在 irb 中可以用 <code>Module.nesting</code> 来查看这个链表的 klass 值。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> A</span><br><span class="line">  <span class="keyword">class</span> B</span><br><span class="line">    <span class="keyword">class</span> C</span><br><span class="line">      p <span class="title class_">Module</span>.nesting <span class="comment"># =&gt; [A::B::C, A::B, A]</span></span><br><span class="line"></span><br><span class="line">      p B == <span class="symbol">:</span><span class="symbol">:A</span><span class="symbol">:</span><span class="symbol">:B</span> <span class="comment"># =&gt; true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>当我们在上面代码中访问常量 <code>B</code> 时，Ruby 会按照 <code>Module.nesting</code> 显示的顺序来查找：先查 <code>A::B::C</code> 的常量表，没找到；再查 <code>A::B</code> 的常量表，也没找到；最后在 <code>A</code> 的常量表中找到了 <code>B</code> 的定义。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> A; <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> A::B</span><br><span class="line">  <span class="keyword">class</span> C</span><br><span class="line">    p <span class="title class_">Module</span>.nesting <span class="comment"># =&gt; [A::B::C, A::B]</span></span><br><span class="line"></span><br><span class="line">    p B == <span class="symbol">:</span><span class="symbol">:A</span><span class="symbol">:</span><span class="symbol">:B</span> <span class="comment"># =&gt; ???</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>能猜到这段代码的结果吗？它会抛出异常：<code>NameError: uninitialized constant A::B::C::B</code></p>
+<h2 id="继承树查找机制">继承树查找机制</h2>
+<p>光靠作用域链查找还不够，我们还需要在子类中访问父类定义的常量。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in base&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Sub</span> &lt; <span class="title class_ inherited__">Base</span></span><br><span class="line">  p <span class="variable constant_">CONST</span> <span class="comment"># =&gt; constant in base</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">p <span class="title class_">Sub</span><span class="symbol">:</span><span class="symbol">:CONST</span> <span class="comment"># =&gt; constant in base</span></span><br></pre></td></tr></table></figure>
+<p>这个很容易理解，Ruby 也会通过继承树来查询常量。Ruby 会沿着当前作用域类<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>的继承树进行搜索，用 <code>Sub.ancestors</code> 就能看到继承树的结构。</p>
+<p>这里就有个关键问题了：如果父作用域和超类中都有同名常量的定义，Ruby 会选择哪个呢？我们来验证一下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in base&#x27;</span></span><br><span class="line">  <span class="variable constant_">CONST_1</span> = <span class="number">1</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span></span><br><span class="line">  <span class="variable constant_">CONST</span> = <span class="string">&#x27;constant in namespace&#x27;</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Sub</span> &lt; <span class="title class_ inherited__">Base</span></span><br><span class="line">    p <span class="title class_">Module</span>.constants</span><br><span class="line">    p <span class="variable constant_">CONST</span> <span class="comment"># =&gt; &#x27;constant in namespace&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  p <span class="title class_">Sub</span><span class="symbol">:</span><span class="symbol">:CONST</span>  <span class="comment"># =&gt; &#x27;constant in base&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>第一句 <code>p CONST</code> 输出的是 ‘constant in namespace’，说明 Ruby 会优先在作用域链中查找常量，然后才查继承树。</p>
+<p>第二句 <code>p Namespace::Sub::CONST</code> 看起来差不多，但结果不一样。执行这句时，Ruby 先找到常量 <code>Sub</code>，然后在 <code>Sub</code> 下面找 <code>CONST</code>。这时候 Ruby 不会考虑作用域链了，而是直接查 <code>Sub</code> 的继承树。这两种查找 <code>CONST</code> 的方式还有其他一些细微的差异，后面会详细说明。</p>
+<h2 id="顶层常量的查找机制">顶层常量的查找机制</h2>
+<p>等等，好像漏了什么？通过 <code>Module.nesting</code> 看不到顶级作用域的常量，那顶层常量是怎么查找的？Ruby 对顶层常量有特殊处理吗？</p>
+<p>这个问题的答案既是肯定的，也是否定的。</p>
+<p>实际上，Ruby 是通过继承树找到这些顶层常量的。前面说过，Ruby 把顶层常量保存在 <code>Object</code> 中。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span></span><br><span class="line">  p <span class="title class_">Math</span><span class="symbol">:</span><span class="symbol">:PI</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>所以在上面的代码中，当我们在 <code>MyClass</code> 的类作用域中访问顶层常量 <code>Math</code> 时，Ruby 通过 <code>MyClass</code> 的继承树找到了存储在 <code>Object</code> 中的顶层常量。</p>
+<p>看起来问题解决了！不需要引入新规则来处理顶层常量查找，确实值得高兴。</p>
+<p>但问题真的完全解决了吗？</p>
+<p>如果你了解 Ruby 内部的继承树结构，就会注意到 <code>Object</code> 并不是继承树的顶端。更重要的是，当我们定义那些经常用作命名空间的 module 时，它们的继承树中甚至可能只有自己！</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> <span class="title class_">Namespace</span>; <span class="keyword">end</span></span><br><span class="line">p <span class="title class_">Namespace</span>.ancestors <span class="comment"># =&gt; [Namespace]</span></span><br></pre></td></tr></table></figure>
+<p>这确实有问题！我们肯定需要在这些 module 作用域中访问顶层常量。所以，Ruby 在继承树搜索逻辑中增加了特殊处理：如果当前是 module，就从 <code>Object</code> 的继承树中再搜索一遍！这样就解决了问题。至于那些在继承树中位于 <code>Object</code> 之上的类（比如 <code>Kernel</code>、<code>BasicObject</code>），它们的特殊行为很可能是故意的。</p>
+<p>其实这也是为什么 <code>BasicObject</code> 类作用域经常被用作特殊的、干净的作用域。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BasicObject</span></span><br><span class="line">  p <span class="title class_">String</span> <span class="comment"># =&gt; NameError: uninitialized constant BasicObject::String</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h2 id="常量查找的陷阱">常量查找的陷阱</h2>
+<p>来看一个有意思的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Hash</span></span><br><span class="line">  p <span class="title class_">String</span> == <span class="title class_">Hash</span><span class="symbol">:</span><span class="symbol">:String</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>在类作用域（这里是 <code>Hash</code>）中访问顶层常量（这里是 <code>String</code>）符合我们之前的预期。但 <code>Hash::String</code> 是什么？显然没有这样的类。当我们期望这段代码抛出异常时，可能会被以下结果吓一跳：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(irb)<span class="symbol">:</span><span class="number">21</span>: <span class="symbol">warning:</span> toplevel constant <span class="title class_">String</span> referenced by <span class="title class_">Hash</span><span class="symbol">:</span><span class="symbol">:String</span></span><br><span class="line"><span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>这怎么可能？</p>
+<p>原因其实很简单：这两种对 <code>String</code> 常量的查询过程在搜索继承树这一步极其相似。它们都会先尝试在 <code>Hash</code> 里找 <code>String</code> 的定义，找不到就沿着继承树向上搜索，最终都会找到 <code>Object</code>。</p>
+<p>这会带来问题吗？</p>
+<p>会的，特别是在 Rails autoloading 环境下。因为 Rails autoloading 依赖于 <code>const_missing</code> 的实现，当同名的顶层常量已经加载时，程序可能会错误地把你的常量引用到那个顶层常量，只给出一条警告信息，在大量日志中很容易被忽略。下面这个例子来自 <a href="http://guides.rubyonrails.org/autoloading_and_reloading_constants.html#when-constants-aren-t-missed">Rails 官方文档</a><sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># app/models/hotel.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Hotel</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># app/models/image.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Image</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># app/models/hotel/image.rb</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Hotel</span></span><br><span class="line">  <span class="keyword">class</span> <span class="title class_">Image</span> &lt; <span class="title class_ inherited__">Image</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ bin/rails r <span class="string">&#x27;Image; p Hotel::Image&#x27;</span> 2&gt;/dev/null</span><br><span class="line">Image <span class="comment"># NOT Hotel::Image!</span></span><br></pre></td></tr></table></figure>
+<h2 id="总结">总结</h2>
+<p>Ruby 的常量查找机制遵循以下优先级顺序：</p>
+<ol>
+<li><strong>作用域链查找</strong>：按照 <code>Module.nesting</code> 的顺序，从当前作用域向外层作用域逐级查找</li>
+<li><strong>继承树查找</strong>：沿着当前作用域类的继承链向上搜索</li>
+<li><strong>特殊处理</strong>：对于 module，额外从 <code>Object</code> 的继承树中搜索顶层常量</li>
+</ol>
+<p>以上就是我理解的 Ruby 常量查找机制。写这篇文章时查了不少资料，把找到的内容整理在这里，希望对遇到类似困惑的人有所帮助。</p>
+<p>就酱！</p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>通常有两个<code>constants</code>方法，这里特指定义在<code>Module</code>中的<strong>实例</strong>方法。当参数<code>inherit = false</code>时，该方法将仅列举存储在类中常量表的常量名。 <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>基于 Ruby 2.4 的实现，在 Ruby 2.3 之前是<code>NODE</code>结构体 <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>需要注意的是，继承树的起点并不是 <code>self.class</code> 而是当前作用域类 <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn4" class="footnote-item"><p>值得庆幸的是，Ruby 2.5.0 中终于将警告修改为直接抛出异常 <a href="#fnref4" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%AD%98%E5%82%A8"><span class="toc-number">1.</span> <span class="toc-text">常量的定义与存储</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F%E5%B5%8C%E5%A5%97%E4%B8%8E-Module-nesting"><span class="toc-number">2.</span> <span class="toc-text">作用域嵌套与 Module.nesting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF%E6%A0%91%E6%9F%A5%E6%89%BE%E6%9C%BA%E5%88%B6"><span class="toc-number">3.</span> <span class="toc-text">继承树查找机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B6%E5%B1%82%E5%B8%B8%E9%87%8F%E7%9A%84%E6%9F%A5%E6%89%BE%E6%9C%BA%E5%88%B6"><span class="toc-number">4.</span> <span class="toc-text">顶层常量的查找机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F%E6%9F%A5%E6%89%BE%E7%9A%84%E9%99%B7%E9%98%B1"><span class="toc-number">5.</span> <span class="toc-text">常量查找的陷阱</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&text=Ruby 常量查找机制"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&is_video=false&description=Ruby 常量查找机制"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Ruby 常量查找机制&body=Check out this article: https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&title=Ruby 常量查找机制"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&name=Ruby 常量查找机制&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2017/06/25/ruby-constant-lookup-zh-cn/&t=Ruby 常量查找机制"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2025
+    Xianglei Wong
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

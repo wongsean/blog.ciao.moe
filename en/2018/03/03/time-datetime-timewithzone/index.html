@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="When building Rails applications, time handling is a challenge that almost every developer will encounter. When you first start dealing with time-related functionality in Rails, you’ll quickly discove">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Time vs DateTime vs TimeWithZone in Rails">
+<meta property="og:url" content="https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/index.html">
+<meta property="og:site_name" content="Ciao.moe">
+<meta property="og:description" content="When building Rails applications, time handling is a challenge that almost every developer will encounter. When you first start dealing with time-related functionality in Rails, you’ll quickly discove">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-03-03T04:39:10.000Z">
+<meta property="article:modified_time" content="2025-08-11T08:32:41.585Z">
+<meta property="article:author" content="Xianglei Wong">
+<meta property="article:tag" content="ruby">
+<meta property="article:tag" content="rails">
+<meta property="article:tag" content="timezone">
+<meta property="article:tag" content="datetime">
+<meta property="article:tag" content="activerecord">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Time vs DateTime vs TimeWithZone in Rails</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75928641-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-75928641-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/feed.xml" title="Ciao.moe" type="application/atom+xml">
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/en/2019/09/24/index-signatures-zh-cn/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/en/2018/03/03/time-datetime-timewithzone-zh-cn/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&text=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&is_video=false&description=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Time vs DateTime vs TimeWithZone in Rails&body=Check out this article: https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&name=Time vs DateTime vs TimeWithZone in Rails&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&t=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-vs-DateTime-Ruby%E2%80%99s-Built-in-Time-Classes"><span class="toc-number">1.</span> <span class="toc-text">Time vs. DateTime: Ruby’s Built-in Time Classes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Basic-Differences"><span class="toc-number">1.1.</span> <span class="toc-text">Basic Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Practical-Use-Cases"><span class="toc-number">1.2.</span> <span class="toc-text">Practical Use Cases</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TimeWithZone-Rails%E2%80%99-Timezone-Handling-Solution"><span class="toc-number">2.</span> <span class="toc-text">TimeWithZone: Rails’ Timezone Handling Solution</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-Do-We-Need-TimeWithZone"><span class="toc-number">2.1.</span> <span class="toc-text">Why Do We Need TimeWithZone?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Surface-Similarities-Internal-Differences"><span class="toc-number">2.2.</span> <span class="toc-text">Surface Similarities, Internal Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Key-Differences-in-Daylight-Saving-Time-Handling"><span class="toc-number">2.3.</span> <span class="toc-text">Key Differences in Daylight Saving Time Handling</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-Hidden-Pitfall"><span class="toc-number">2.4.</span> <span class="toc-text">A Hidden Pitfall</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Best-Practices"><span class="toc-number">2.5.</span> <span class="toc-text">Best Practices</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#System-Timezone-vs-Application-Timezone-Two-Timezone-Systems"><span class="toc-number">3.</span> <span class="toc-text">System Timezone vs. Application Timezone: Two Timezone Systems</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Division-of-the-Two-Systems"><span class="toc-number">3.1.</span> <span class="toc-text">Division of the Two Systems</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Seemingly-Harmless-Timezone-Differences"><span class="toc-number">3.2.</span> <span class="toc-text">Seemingly Harmless Timezone Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Analysis-of-the-Leap-Year-Trap"><span class="toc-number">3.3.</span> <span class="toc-text">Analysis of the Leap Year Trap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Solution"><span class="toc-number">3.4.</span> <span class="toc-text">Solution</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Time vs DateTime vs TimeWithZone in Rails
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Xianglei Wong</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2018-03-03T04:39:10.000Z" class="dt-published" itemprop="datePublished">2018-03-03</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/tech/">tech</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/activerecord/" rel="tag">activerecord</a>, <a class="p-category" href="/tags/datetime/" rel="tag">datetime</a>, <a class="p-category" href="/tags/rails/" rel="tag">rails</a>, <a class="p-category" href="/tags/ruby/" rel="tag">ruby</a>, <a class="p-category" href="/tags/timezone/" rel="tag">timezone</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>When building Rails applications, time handling is a challenge that almost every developer will encounter. When you first start dealing with time-related functionality in Rails, you’ll quickly discover a confusing question: Rails has three classes for representing time—Time, DateTime, and ActiveSupport::TimeWithZone. What exactly are the differences between them? When should you use which one?</p>
+<p>This seemingly simple question actually involves multiple layers including Ruby core library design, Rails framework extensions, and timezone handling mechanisms. Choosing the wrong time class can not only cause functional issues but may also produce hard-to-detect bugs in scenarios involving timezone conversions and daylight saving time calculations.</p>
+<p>Let’s start with the basics and gradually unveil the mysteries of time handling in Rails.</p>
+<h2 id="Time-vs-DateTime-Ruby’s-Built-in-Time-Classes">Time vs. DateTime: Ruby’s Built-in Time Classes</h2>
+<p>Compared to TimeWithZone which we’ll introduce later, Time and DateTime are Ruby’s built-in time handling classes and are what most developers encounter first. But what are the differences between them? Which one should you choose in actual development?</p>
+<h3 id="Basic-Differences">Basic Differences</h3>
+<p>From a technical perspective, the two have clear positional differences:</p>
+<ul>
+<li><strong>Time</strong> comes from Ruby’s core library and can be used without requiring anything</li>
+<li><strong>DateTime</strong> is a subclass of Date, belongs to Ruby’s standard library, and requires <code>require 'date'</code></li>
+</ul>
+<p>If you consult some earlier materials, you might see descriptions like: “Time is a simple wrapper around <a href="https://en.wikipedia.org/wiki/Unix_time">POSIX time</a> and can only represent times after 1970.” But this limitation has long become history—starting from Ruby 1.9.2, Time’s time representation range is no longer subject to this restriction.</p>
+<blockquote>
+<p>Since Ruby 1.9.2, Time implementation uses a signed 63 bit integer, Bignum or Rational. The integer is a number of nanoseconds since the Epoch which can represent 1823-11-12 to 2116-02-20. When Bignum or Rational is used (before 1823, after 2116, under nanosecond), Time works slower as when integer is used.</p>
+</blockquote>
+<h3 id="Practical-Use-Cases">Practical Use Cases</h3>
+<p>For the vast majority of web application development scenarios, the functional differences between Time and DateTime are not obvious. Both can handle common time operations well: year-month-day, hour-minute-second, week calculations, and basic timezone handling, completely satisfying daily development needs.</p>
+<p>However, if your application needs to handle historical calendar changes, DateTime would be the better choice. Here’s a classic example from the official documentation—if you feel confused after reading it, don’t worry too much, as it indicates your application scenarios likely don’t need this feature:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Same date, different calendar systems produce different days of the week</span></span><br><span class="line">shakespeare = <span class="title class_">DateTime</span>.iso8601(<span class="string">&#x27;1616-04-23&#x27;</span>, <span class="title class_">Date</span><span class="symbol">:</span><span class="symbol">:ENGLAND</span>)</span><br><span class="line"> <span class="comment">#=&gt; Tue, 23 Apr 1616 00:00:00 +0000</span></span><br><span class="line">cervantes = <span class="title class_">DateTime</span>.iso8601(<span class="string">&#x27;1616-04-23&#x27;</span>, <span class="title class_">Date</span><span class="symbol">:</span><span class="symbol">:ITALY</span>)</span><br><span class="line"> <span class="comment">#=&gt; Sat, 23 Apr 1616 00:00:00 +0000</span></span><br></pre></td></tr></table></figure>
+<h2 id="TimeWithZone-Rails’-Timezone-Handling-Solution">TimeWithZone: Rails’ Timezone Handling Solution</h2>
+<p>When we move from simple single-timezone applications to internationalized multi-timezone applications, Ruby’s built-in Time and DateTime start to feel inadequate. This is where ActiveSupport::TimeWithZone (hereafter referred to as TimeWithZone) shows its value.</p>
+<h3 id="Why-Do-We-Need-TimeWithZone">Why Do We Need TimeWithZone?</h3>
+<p>Although Time and DateTime can both store timezone information, they primarily rely on the system’s <code>ENV['TZ']</code> environment variable, with limited timezone switching capabilities—at most switching between GMT and UTC.<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> This design works fine for single-timezone localized applications, but once international scenarios with multi-timezone handling are involved, Ruby’s built-in time libraries fall short.</p>
+<p>TimeWithZone, as the default corresponding type for datetime database types in ActiveRecord, is specifically designed to solve timezone handling problems in Rails applications.</p>
+<h3 id="Surface-Similarities-Internal-Differences">Surface Similarities, Internal Differences</h3>
+<p>In daily use, you might have difficulty noticing whether you’re dealing with TimeWithZone or DateTime. Rails has extensively expanded DateTime, giving both extremely similar instance methods, supporting time interval addition and subtraction, and enabling mutual conversion.</p>
+<p>However, if you think this means the two can be used interchangeably, that would be a big mistake.</p>
+<h3 id="Key-Differences-in-Daylight-Saving-Time-Handling">Key Differences in Daylight Saving Time Handling</h3>
+<p>The most important difference between the two manifests when handling uncertain-length time intervals (like days, months, years), especially involving daylight saving time:</p>
+<ul>
+<li><strong>DateTime</strong>: Completely ignores daylight saving time rules. Even if time calculations cross daylight saving time boundaries, neither the time portion nor the timezone portion will change</li>
+<li><strong>TimeWithZone</strong>: Intelligently handles daylight saving time. When crossing daylight saving time boundaries, the timezone will adjust accordingly, maintaining consistency with human intuition</li>
+</ul>
+<h3 id="A-Hidden-Pitfall">A Hidden Pitfall</h3>
+<p>If your application requires precise time interval calculations, this difference becomes critically important. More dangerously, it often causes bugs without your awareness.</p>
+<p>Consider this scenario: you have a <code>periods</code> table that records start and end times of time periods. Since ActiveRecord maps datetime types to TimeWithZone, the following code might produce unexpected problems:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Calculate time intervals using DateTime</span></span><br><span class="line">start_time = <span class="title class_">DateTime</span>.current</span><br><span class="line">end_time = start_time + <span class="number">1</span>.month</span><br><span class="line"></span><br><span class="line"><span class="comment"># Store to database (automatically converted to TimeWithZone)</span></span><br><span class="line"><span class="title class_">Period</span>.create!(<span class="symbol">start_time:</span> start_time, <span class="symbol">end_time:</span> end_time)</span><br><span class="line">period = <span class="title class_">Period</span>.last</span><br><span class="line"></span><br><span class="line"><span class="comment"># After reading from database and recalculating, results might be inconsistent!</span></span><br><span class="line">period.end_time == period.start_time + <span class="number">1</span>.month <span class="comment"># =&gt; might be false!</span></span><br></pre></td></tr></table></figure>
+<p>The problem here is: DateTime calculations and TimeWithZone calculations produce differences when crossing daylight saving time boundaries, causing inconsistency between calculation results before storage and recalculation results after reading from the database.</p>
+<h3 id="Best-Practices">Best Practices</h3>
+<p>To avoid these types of problems, I recommend adopting the following strategies:</p>
+<ol>
+<li><strong>Avoid using uncertain-length time intervals</strong> (recommended): Use precise hours-minutes-seconds rather than days, months, years</li>
+<li><strong>Maintain type consistency</strong>: Use unified time types for calculations in unified timezones, such as uniformly converting to UTC time for calculations, then converting timezones as needed for display</li>
+</ol>
+<h2 id="System-Timezone-vs-Application-Timezone-Two-Timezone-Systems">System Timezone vs. Application Timezone: Two Timezone Systems</h2>
+<p>In Rails applications, there are actually two parallel timezone systems, and understanding their differences is crucial for avoiding timezone-related bugs.</p>
+<h3 id="Division-of-the-Two-Systems">Division of the Two Systems</h3>
+<p>Simply put:</p>
+<ul>
+<li><strong>System timezone</strong> (<code>ENV['TZ']</code>): affects the default timezone of <code>Time.now</code> and <code>DateTime.now</code></li>
+<li><strong>Application timezone</strong> (<code>config.time_zone</code>): affects TimeWithZone retrieved from databases, and <code>Time.current</code> and <code>DateTime.current</code> introduced by ActiveSupport</li>
+</ul>
+<h3 id="Seemingly-Harmless-Timezone-Differences">Seemingly Harmless Timezone Differences</h3>
+<p>Under normal circumstances, even if system timezone and application timezone differ, the actual time points they represent should be consistent—completely equal when converted to UTC time. However, this difference sometimes brings unexpected problems.</p>
+<p>Let me share a real bug I once encountered. Suppose the current time is 2018-03-01 10:00:00 +0800, system timezone is set to Shanghai timezone (+0800), while application timezone is set to Pacific timezone (-0800):</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Calculate using system timezone time</span></span><br><span class="line">start_time = <span class="title class_">DateTime</span>.now  <span class="comment"># 2018-03-01 10:00:00 +0800</span></span><br><span class="line">end_time = start_time + <span class="number">2</span>.years  <span class="comment"># 2020-03-01 10:00:00 +0800</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Store to database</span></span><br><span class="line"><span class="title class_">Period</span>.create!(<span class="symbol">start_time:</span> start_time, <span class="symbol">end_time:</span> end_time)</span><br><span class="line">period = <span class="title class_">Period</span>.last</span><br><span class="line"></span><br><span class="line"><span class="comment"># After reading from database and comparing, surprisingly found unequal!</span></span><br><span class="line">period.start_time.to_datetime + <span class="number">2</span>.years == period.end_time.to_datetime</span><br><span class="line"><span class="comment"># =&gt; false, 1 day difference!</span></span><br></pre></td></tr></table></figure>
+<h3 id="Analysis-of-the-Leap-Year-Trap">Analysis of the Leap Year Trap</h3>
+<p>If I tell you this bug only appears once every four years in most cases, you might immediately think of the leap year problem.</p>
+<p>Let’s analyze what happened:</p>
+<ol>
+<li><strong>Calculation phase</strong>: According to Shanghai time, March 1, 2018 + 2 years = March 1, 2020</li>
+<li><strong>Storage phase</strong>: When storing in database, timezone is converted to application timezone (-0800)</li>
+<li><strong>Reading phase</strong>: Start time becomes February 28, 2018 (result of timezone conversion)</li>
+<li><strong>Recalculation</strong>: February 28, 2018 + 2 years = February 28, 2020</li>
+</ol>
+<p>The key is that 2020 is a leap year! From February 28 to March 1, there’s an extra February 29, while 2018 doesn’t have this day, thus producing a 1-day difference.</p>
+<h3 id="Solution">Solution</h3>
+<p>As mentioned earlier, to avoid these problems, the best approach is:</p>
+<ol>
+<li>Try to avoid using uncertain time units like days, months, years for calculations</li>
+<li>If necessary, calculate uniformly in UTC time, then convert to appropriate timezones for display</li>
+</ol>
+<p>Time handling turns out to be surprisingly more complex than it appears.</p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>GMT (Greenwich Mean Time) and UTC (Coordinated Universal Time) have no difference in most uses, and Ruby’s Time/DateTime treat them identically. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-vs-DateTime-Ruby%E2%80%99s-Built-in-Time-Classes"><span class="toc-number">1.</span> <span class="toc-text">Time vs. DateTime: Ruby’s Built-in Time Classes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Basic-Differences"><span class="toc-number">1.1.</span> <span class="toc-text">Basic Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Practical-Use-Cases"><span class="toc-number">1.2.</span> <span class="toc-text">Practical Use Cases</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TimeWithZone-Rails%E2%80%99-Timezone-Handling-Solution"><span class="toc-number">2.</span> <span class="toc-text">TimeWithZone: Rails’ Timezone Handling Solution</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-Do-We-Need-TimeWithZone"><span class="toc-number">2.1.</span> <span class="toc-text">Why Do We Need TimeWithZone?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Surface-Similarities-Internal-Differences"><span class="toc-number">2.2.</span> <span class="toc-text">Surface Similarities, Internal Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Key-Differences-in-Daylight-Saving-Time-Handling"><span class="toc-number">2.3.</span> <span class="toc-text">Key Differences in Daylight Saving Time Handling</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-Hidden-Pitfall"><span class="toc-number">2.4.</span> <span class="toc-text">A Hidden Pitfall</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Best-Practices"><span class="toc-number">2.5.</span> <span class="toc-text">Best Practices</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#System-Timezone-vs-Application-Timezone-Two-Timezone-Systems"><span class="toc-number">3.</span> <span class="toc-text">System Timezone vs. Application Timezone: Two Timezone Systems</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Division-of-the-Two-Systems"><span class="toc-number">3.1.</span> <span class="toc-text">Division of the Two Systems</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Seemingly-Harmless-Timezone-Differences"><span class="toc-number">3.2.</span> <span class="toc-text">Seemingly Harmless Timezone Differences</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Analysis-of-the-Leap-Year-Trap"><span class="toc-number">3.3.</span> <span class="toc-text">Analysis of the Leap Year Trap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Solution"><span class="toc-number">3.4.</span> <span class="toc-text">Solution</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&text=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&is_video=false&description=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Time vs DateTime vs TimeWithZone in Rails&body=Check out this article: https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&title=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&name=Time vs DateTime vs TimeWithZone in Rails&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2018/03/03/time-datetime-timewithzone/&t=Time vs DateTime vs TimeWithZone in Rails"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2025
+    Xianglei Wong
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

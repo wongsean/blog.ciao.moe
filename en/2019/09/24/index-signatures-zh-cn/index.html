@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="更新说明: TypeScript 4.1 引入了 noUncheckedIndexedAccess 编译选项，可以在一定程度上缓解本文讨论的问题。启用此选项后，Index Signature 访问会自动包含 | undefined 类型。  TypeScript 中的 Index Signature 使用频率很高。它可以用来表示通过方括号[]访问属性的数据结构，例如 TypeScript 内建类">
+<meta property="og:type" content="article">
+<meta property="og:title" content="被 TypeScript 索引签名掩盖的 undefined">
+<meta property="og:url" content="https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/index.html">
+<meta property="og:site_name" content="Ciao.moe">
+<meta property="og:description" content="更新说明: TypeScript 4.1 引入了 noUncheckedIndexedAccess 编译选项，可以在一定程度上缓解本文讨论的问题。启用此选项后，Index Signature 访问会自动包含 | undefined 类型。  TypeScript 中的 Index Signature 使用频率很高。它可以用来表示通过方括号[]访问属性的数据结构，例如 TypeScript 内建类">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-09-24T06:04:07.000Z">
+<meta property="article:modified_time" content="2025-08-11T08:19:47.223Z">
+<meta property="article:author" content="Xianglei Wong">
+<meta property="article:tag" content="typescript">
+<meta property="article:tag" content="type-safety">
+<meta property="article:tag" content="javascript">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>被 TypeScript 索引签名掩盖的 undefined</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-75928641-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-75928641-1');
+  </script>
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/feed.xml" title="Ciao.moe" type="application/atom+xml">
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/en/2019/09/24/index-signatures/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/en/2018/03/03/time-datetime-timewithzone/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&text=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&is_video=false&description=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=被 TypeScript 索引签名掩盖的 undefined&body=Check out this article: https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&name=被 TypeScript 索引签名掩盖的 undefined&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&t=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        被 TypeScript 索引签名掩盖的 undefined
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Xianglei Wong</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-09-24T06:04:07.000Z" class="dt-published" itemprop="datePublished">2019-09-24</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/tech/">tech</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/javascript/" rel="tag">javascript</a>, <a class="p-category" href="/tags/type-safety/" rel="tag">type-safety</a>, <a class="p-category" href="/tags/typescript/" rel="tag">typescript</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <blockquote>
+<p><strong>更新说明</strong>: TypeScript 4.1 引入了 <code>noUncheckedIndexedAccess</code> 编译选项，可以在一定程度上缓解本文讨论的问题。启用此选项后，Index Signature 访问会自动包含 <code>| undefined</code> 类型。</p>
+</blockquote>
+<p>TypeScript 中的 Index Signature 使用频率很高。它可以用来表示通过方括号<code>[]</code>访问属性的数据结构，例如 TypeScript 内建类型<code>Array&lt;T&gt;</code>中就包含如下实现：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">Array</span>&lt;T&gt; &#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  [<span class="attr">n</span>: <span class="built_in">number</span>]: T</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同时，在 JavaScript 中相比 Map 类的实例，开发者更倾向于直接使用 object 来实现映射数据结构。虽然 Map 在某些方面更安全，但它存在序列化问题——<code>JSON.stringify()</code> 无法直接序列化 Map 对象，这在前后端数据交互中带来不便。TypeScript 将对象映射称为 Record，其类型定义为<code>type Record&lt;K extends keyof any, T&gt; = &#123; [P in K]: T &#125;</code>。</p>
+<p>然而，如果期望通过 TypeScript 实现完全的类型安全，需要谨慎使用 Index Signature。主要问题在于使用 Index Signature 获取的值类型并不准确，例如</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="attr">map</span>: &#123; [<span class="attr">key</span>: <span class="built_in">string</span>]: <span class="built_in">number</span> &#125; = &#123;</span><br><span class="line">  <span class="attr">foo</span>: <span class="number">1</span>,</span><br><span class="line">  <span class="attr">bar</span>: <span class="number">2</span>,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> value = map[<span class="string">&quot;baz&quot;</span>];</span><br><span class="line"><span class="comment">// value: number</span></span><br></pre></td></tr></table></figure>
+<p>这里使用不存在的 key 获取到的结果是<code>undefined</code>，但 TypeScript 推导出的值类型并不包含这种可能性。在 web 应用中经常使用 array 和 map 来批量处理数据或映射数据结构，这种隐藏的<code>undefined</code>可能导致运行时错误。</p>
+<p>早在 2017 年初，社区就在 <a href="https://github.com/microsoft/TypeScript">microsoft/TypeScript</a> 提出了相关 <a href="https://github.com/microsoft/TypeScript/issues/13778">issue</a>。有人提出直接修改 Index Signature 的值定义，加上<code>| undefined</code>。但这个方案存在问题：在定义 map 时，我们只希望在获取值时类型能够表示值可能不存在，而在值类型定义后加上<code>| undefined</code>会改变语义，也无法阻止往集合中添加<code>undefined</code>值。更重要的是，这会影响迭代器的返回值类型——例如 <code>Object.values()</code> 的返回类型也会包含 <code>undefined</code>，这显然不符合预期。</p>
+<p>这个问题至今未得到解决，根本原因在于 TypeScript 依然需要保持对 JavaScript 代码的完全兼容。JavaScript 的一些设计限制势必会影响 TypeScript 构建更安全的类型系统。这不仅仅体现在 Index Signatures 上，而是一个更广泛的架构约束。</p>
+<p>作为静态类型的 superset，TypeScript 的语法设计不能与 JavaScript 产生冲突，这意味着它无法限制 JavaScript 的某些功能，也无法在运行时做任何额外的事情。而彻底解决 Index Signatures 的类型安全问题，恰好需要突破这些根本性的限制。</p>
+<p>我时常想，如果脱离了 JavaScript 的约束，TypeScript 或许能成为一门更优雅的语言，但也会失去其最大的优势——渐进式采用和庞大的生态系统。现在的设计更多是现实考量下的权衡取舍。</p>
+<p>当然，面对这样的现实，不同的开发者有不同的选择：有人选择妥协，有人通过各种变通方案维护内心的代码洁癖，也有人在心里默默期盼——愿世界没有 JS。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/about/">About</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="https://github.com/wongsean">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&text=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&is_video=false&description=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=被 TypeScript 索引签名掩盖的 undefined&body=Check out this article: https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&title=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&name=被 TypeScript 索引签名掩盖的 undefined&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://news.ycombinator.com/submitlink?u=https://blog.ciao.moe/en/2019/09/24/index-signatures-zh-cn/&t=被 TypeScript 索引签名掩盖的 undefined"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2025
+    Xianglei Wong
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/about/">About</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="https://github.com/wongsean">Projects</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
